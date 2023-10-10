@@ -15,6 +15,14 @@ public class UserContoller {
 
     @PostMapping("/")
     public UserModel create(@RequestBody UserModel userModel) {
+        var user = userRepository.findByUsername(userModel.getUsername());
+
+        if (user != null) {
+            System.out.println("Usuário já existe!");
+            return null;
+        }
+
         return userRepository.save(userModel);
+
     }
 }
