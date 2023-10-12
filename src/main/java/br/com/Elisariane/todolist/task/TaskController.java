@@ -37,12 +37,19 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.OK).body(task);
     }
 
-
     @GetMapping("/")
     public List<TaskModel> list(HttpServletRequest request){
         var idUser = request.getAttribute("idUser");
         var tasks = taskRepository.findByIdUser((UUID) idUser);
         return tasks;
+    }
+
+    @PutMapping("/{id}")
+    public TaskModel update(@RequestBody TaskModel taskModel, HttpServletRequest request, @PathVariable UUID id) {
+        var idUser = request.getAttribute("idUser");
+        taskModel.setIdUser((UUID)idUser);
+        taskModel.setId(id);
+        return taskRepository.save(taskModel);
     }
 
 }
