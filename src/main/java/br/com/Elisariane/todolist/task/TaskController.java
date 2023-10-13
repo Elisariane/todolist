@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/tasks")
@@ -20,22 +21,26 @@ public class TaskController {
 
     @PostMapping("/")
     public ResponseEntity create(@RequestBody TaskModel taskModel, HttpServletRequest request) {
-        var idUser = (UUID) request.getAttribute("idUser");
-        taskModel.setIdUser(idUser);
+        try {
+            var idUser = (UUID) request.getAttribute("idUser");
+            taskModel.setIdUser(idUser);
 
-        var currentDate = LocalDateTime.now();
+            var currentDate = LocalDateTime.now();
 
-        if (currentDate.isAfter(taskModel.getStartAt()) || currentDate.isAfter(taskModel.getEndAt())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de início / data de término deve ser maior que a data atual!");
+            if (currentDate.isAfter(taskModel.getStartAt()) || currentDate.isAfter(taskModel.getEndAt())){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de início / data de término deve ser maior que a data atual!");
+            }
+
+            if (taskModel.getStartAt().isAfter(taskModel.getEndAt())){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de início deve ser manor que a data de término!");
+            }
+
+            var task = taskRepository.save(taskModel);
+
+            return ResponseEntity.status(HttpStatus.OK).body(task);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e);
         }
-
-        if (taskModel.getStartAt().isAfter(taskModel.getEndAt())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de início deve ser manor que a data de término!");
-        }
-
-        var task = taskRepository.save(taskModel);
-
-        return ResponseEntity.status(HttpStatus.OK).body(task);
     }
 
     @GetMapping("/")
